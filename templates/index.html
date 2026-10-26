@@ -2,144 +2,191 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{{ c.groom }} &amp; {{ c.bride }} · Wedding Invitation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>{{ w.bride }} weds {{ w.groom }} · Wedding Invitation</title>
+  <meta name="description" content="You are cordially invited to the wedding of {{ w.bride }} &amp; {{ w.groom }} on {{ w.main_date_display }}, Secunderabad." />
+  <meta name="theme-color" content="#2a0610" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="{{ w.bride }} weds {{ w.groom }} · Wedding Invitation" />
+  <meta property="og:description" content="{{ w.tagline }}" />
+  <meta property="og:image" content="{{ url_for('static', filename='img/card-save-the-date.jpg', _external=True) }}" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:wght@300;400;600&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Great+Vibes&family=Montserrat:wght@300;400;500&family=Noto+Serif+Telugu:wght@400;600&display=swap" rel="stylesheet" />
+  <script>document.documentElement.className="js"</script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
 </head>
-<body>
+<body class="locked">
 
-  <!-- 3D background (Three.js) -->
-  <canvas id="bg3d"></canvas>
+  <!-- 3D background scene -->
+  <canvas id="bg3d" aria-hidden="true"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
 
-  <!-- Envelope intro -->
-  <div id="intro">
-    <div class="envelope" id="envelope">
-      <div class="env-back"></div>
-      <div class="letter"><span>You are invited</span></div>
-      <div class="env-front"></div>
-      <div class="env-flap"></div>
-      <div class="seal">❤</div>
+  <!-- ============ INTRO: gates -> curtains -> website ============ -->
+  <div id="stage" role="dialog" aria-label="Open the invitation">
+    <div class="curtains" aria-hidden="true">
+      <div class="curtain left"></div>
+      <div class="curtain right"></div>
+      <div class="pelmet"></div>
     </div>
-    <p class="intro-hint">Tap the envelope to open</p>
+
+    <div class="gates" aria-hidden="true">
+      <div class="gate left">
+        <div class="panel"><span class="gname">{{ w.bride }}</span></div>
+        <div class="panel tall"></div>
+        <div class="ring"></div>
+      </div>
+      <div class="gate right">
+        <div class="panel"><span class="gname">{{ w.groom }}</span></div>
+        <div class="panel tall"></div>
+        <div class="ring"></div>
+      </div>
+    </div>
+
+    <div class="toran" id="toran" aria-hidden="true"></div>
+
+    <button id="open-btn" class="medallion" aria-label="Open the invitation">
+      <span class="med-inner">శ్రీ</span>
+    </button>
+    <p class="open-hint">Tap to open the gates</p>
   </div>
 
-  <main id="site" class="hidden">
+  <!-- ============ WEBSITE ============ -->
+  <main id="site">
 
     <!-- HERO -->
     <section class="hero" id="home">
-      <p class="eyebrow reveal">Together with their families</p>
-      <h1 class="names reveal">
-        <span class="n1">{{ c.groom }}</span>
-        <span class="amp">&amp;</span>
-        <span class="n2">{{ c.bride }}</span>
-      </h1>
-      <p class="tagline reveal">{{ c.tagline }}</p>
-      <p class="date reveal">{{ c.date_display }}</p>
-      <p class="venue reveal">{{ c.venue }} · {{ c.city }}</p>
+      <p class="blessing reveal-hero" style="--d:.1s">
+        <span class="te">శ్రీవస్తు</span> <i>Srivasthu</i>
+        <b>✦</b>
+        <i>Shubhamasthu</i> <span class="te">శుభమస్తు</span>
+      </p>
+      <p class="eyebrow reveal-hero" style="--d:.25s">Wedding Invitation</p>
 
-      <div class="countdown reveal" id="countdown">
+      <h1 class="names" aria-label="{{ w.bride }} weds {{ w.groom }}">
+        <span class="word" data-word="{{ w.bride }}" style="--d:.4s"></span>
+        <span class="weds reveal-hero" style="--d:1.2s"><u></u>weds<u></u></span>
+        <span class="word" data-word="{{ w.groom }}" style="--d:1.4s"></span>
+      </h1>
+
+      <div class="scratch-block reveal-hero" style="--d:2s">
+        <p class="std">Save the Date</p>
+        <div class="scratch" id="scratch">
+          <div class="date-reveal">
+            <span class="wd">{{ w.main_weekday }}</span>
+            <span class="big">{{ w.main_day }}<sup>st</sup></span>
+            <span class="mo">{{ w.main_month }} {{ w.main_year }}</span>
+            <span class="tm">{{ w.main_time }}</span>
+          </div>
+          <canvas id="scratch-canvas" aria-label="Scratch to reveal the wedding date"></canvas>
+        </div>
+        <button class="link-btn" id="reveal-btn" type="button">Scratch with your finger · or tap here to reveal</button>
+      </div>
+
+      <div class="countdown locked" id="countdown" data-date="{{ w.main_date_iso }}">
         <div><b id="cd-d">00</b><small>Days</small></div>
         <div><b id="cd-h">00</b><small>Hours</small></div>
         <div><b id="cd-m">00</b><small>Minutes</small></div>
         <div><b id="cd-s">00</b><small>Seconds</small></div>
       </div>
 
-      <a href="#rsvp" class="btn reveal">RSVP Now</a>
-      <div class="scroll-down">⌄</div>
+      <a class="scroll-cue" href="#invite" aria-label="Scroll down"><span></span></a>
     </section>
 
-    <!-- STORY -->
-    <section class="section" id="story">
-      <h2 class="title reveal">Our Story</h2>
-      <div class="timeline">
-        {% for s in c.story %}
-        <article class="t-item reveal tilt">
-          <span class="year">{{ s.year }}</span>
-          <h3>{{ s.title }}</h3>
-          <p>{{ s.text }}</p>
-        </article>
-        {% endfor %}
+    <!-- INVITATION TEXT -->
+    <section class="section" id="invite">
+      <div class="paper tilt reveal">
+        <div class="paper-border">
+          <p class="te om">శ్రీ</p>
+          <p class="small-caps">With the blessings of the Almighty</p>
+          <h2 class="parents">
+            {% for p in w.bride_parents %}<span>{{ p }}</span>{% endfor %}
+          </h2>
+          <p class="body-text">
+            solicit your gracious presence with family on the auspicious occasion
+            of the marriage of our daughter
+          </p>
+          <p class="couple-name">{{ w.bride_title }}</p>
+          <div class="orn"><span></span><i>❖</i><span></span></div>
+          <p class="with">with</p>
+          <p class="couple-name groom">{{ w.groom_title }}</p>
+          <p class="body-text sm">({{ w.groom_parents }})</p>
+          <div class="orn"><span></span><i>❖</i><span></span></div>
+          <p class="small-caps">Sumuhurtham</p>
+          <p class="body-text strong">{{ w.main_date_display }} at 11:13 a.m.<br /><em>“Dhanur Lagnam”</em></p>
+          <p class="body-text sm">Lunch follows…</p>
+        </div>
       </div>
     </section>
 
     <!-- EVENTS -->
     <section class="section" id="events">
-      <h2 class="title reveal">Celebrations</h2>
-      <div class="cards">
-        {% for e in c.events %}
-        <div class="flip reveal">
-          <div class="flip-inner">
-            <div class="face front">
-              <div class="icon">{{ e.icon }}</div>
-              <h3>{{ e.name }}</h3>
-              <p>{{ e.time }}</p>
-            </div>
-            <div class="face back">
-              <h3>{{ e.name }}</h3>
-              <p>{{ e.desc }}</p>
-              <small>{{ c.venue }}</small>
-            </div>
+      <h2 class="title reveal">The Celebrations</h2>
+      <p class="sub reveal">Three days of joy, tradition and togetherness</p>
+      <div class="events">
+        {% for e in w.events %}
+        <article class="event tilt reveal" style="--i:{{ loop.index0 }}">
+          <div class="date-badge">
+            <small>{{ e.weekday }}</small>
+            <b>{{ e.day }}</b>
+            <span>{{ e.month }}</span>
           </div>
-        </div>
+          <h3>{{ e.name }}</h3>
+          <p class="te-sub">{{ e.telugu }}</p>
+          <p class="time">{{ e.time }}</p>
+          <p class="note">{{ e.note }}</p>
+          <div class="venue-line">
+            <strong>{{ e.venue }}</strong>
+            <span>{{ e.address }}</span>
+          </div>
+          <div class="btns">
+            <a class="btn sm" target="_blank" rel="noopener"
+               href="https://www.google.com/maps/search/?api=1&query={{ e.map_q }}">Directions</a>
+            <a class="btn sm ghost" href="{{ url_for('calendar', key=e.key) }}">Add to calendar</a>
+          </div>
+        </article>
         {% endfor %}
       </div>
     </section>
 
-    <!-- VENUE -->
+    <!-- CARD -->
+    <section class="section" id="card">
+      <h2 class="title reveal">Our Invitation Card</h2>
+      <p class="sub reveal">Tap the card to flip it</p>
+      <div class="card-scene reveal">
+        <div class="flipcard tilt" id="flipcard" tabindex="0" role="button" aria-label="Flip the invitation card">
+          <div class="flip-in">
+            <img class="face f" src="{{ url_for('static', filename='img/card-save-the-date.jpg') }}" alt="Save the date card" loading="lazy" />
+            <img class="face b" src="{{ url_for('static', filename='img/card-invitation.jpg') }}" alt="Wedding invitation card" loading="lazy" />
+          </div>
+        </div>
+      </div>
+      
+    </section>
+
+    <!-- MAP -->
     <section class="section" id="venue">
-      <h2 class="title reveal">The Venue</h2>
-      <div class="venue-card reveal tilt">
-        <h3>{{ c.venue }}</h3>
-        <p>{{ c.city }}</p>
-        <a class="btn ghost" href="{{ c.map_url }}" target="_blank" rel="noopener">Get Directions</a>
+      <h2 class="title reveal">Find Us</h2>
+      <div class="tabs reveal">
+        <button class="tab active" data-q="{{ w.events[1].map_q }}">Wedding &amp; Reception</button>
+        <button class="tab" data-q="{{ w.events[0].map_q }}">Pelli Kuthuru</button>
+      </div>
+      <div class="map reveal">
+        <iframe id="map" title="Venue map" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+                src="https://www.google.com/maps?q={{ w.events[1].map_q }}&output=embed"></iframe>
       </div>
     </section>
 
-    <!-- RSVP -->
-    <section class="section" id="rsvp">
-      <h2 class="title reveal">Will You Join Us?</h2>
-      <form id="rsvp-form" class="form reveal" autocomplete="off">
-        <input type="text" name="name" placeholder="Your full name" required />
-        <input type="email" name="email" placeholder="Email (optional)" />
-        <div class="row">
-          <select name="attending">
-            <option value="yes">Joyfully accept 🎉</option>
-            <option value="maybe">Not sure yet 🤔</option>
-            <option value="no">Regretfully decline 💌</option>
-          </select>
-          <input type="number" name="guests" min="1" max="10" value="1" title="Number of guests" />
-        </div>
-        <textarea name="message" rows="3" placeholder="A message for the couple (optional)"></textarea>
-        <button class="btn" type="submit">Send RSVP</button>
-        <p id="rsvp-status" class="status"></p>
-      </form>
-    </section>
-
-    <!-- WISHES -->
-    <section class="section" id="wishes">
-      <h2 class="title reveal">Guest Wishes</h2>
-      <form id="wish-form" class="form small reveal" autocomplete="off">
-        <input type="text" name="name" placeholder="Your name" required />
-        <textarea name="message" rows="2" placeholder="Write your blessing..." required></textarea>
-        <button class="btn ghost" type="submit">Post Wish</button>
-      </form>
-      <div id="wish-list" class="wish-list"></div>
-    </section>
-
     <footer>
-      <p class="script">{{ c.groom }} &amp; {{ c.bride }}</p>
-      <p>With love &amp; gratitude 💖</p>
+      <p class="te">శ్రీవస్తు · శుభమస్తు</p>
+      <p class="script">{{ w.bride }} &amp; {{ w.groom }}</p>
+      <p class="tag">{{ w.tagline }}</p>
+      <p class="comp">{{ w.compliments }}</p>
     </footer>
   </main>
 
-  <button id="music-btn" class="music hidden" title="Toggle sparkle">✨</button>
-
-  <script>
-    window.WEDDING = { date: "{{ c.date_iso }}" };
-  </script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script src="{{ url_for('static', filename='js/vendor/three.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/scene.js') }}"></script>
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
