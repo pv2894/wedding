@@ -1,359 +1,138 @@
-
 """
-Wedding Invitation – Flask backend
+Vaishnavi weds Chinmay - Wedding Invitation (Flask)
 
-Local development:
-    pip install -r requirements.txt
-    python app.py
+Local:    pip install -r requirements.txt
+          python app.py            ->  http://127.0.0.1:5000
+Railway:  gunicorn app:app         (see Procfile / README.md)
 
-Render production:
-    gunicorn app:app
+Everything you may want to change lives in the WEDDING dict below.
+There is no database: the site is a pure invitation (no RSVP).
 """
-
 import os
-import re
-import sqlite3
 from datetime import datetime, timezone
-from contextlib import closing
 
-from flask import Flask, render_template, request, jsonify, g
+from flask import Flask, abort, render_template, Response
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 app = Flask(__name__)
-
-# Absolute path prevents database path issues during deployment.
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-DB_PATH = os.path.join(BASE_DIR, "wedding.db")
-
-# Set ADMIN_KEY in Render Environment Variables before deployment.
-ADMIN_KEY = os.environ.get("ADMIN_KEY", "change-me")
+app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 60 * 60 * 24  # cache static files 1 day
+# Railway sits behind a proxy: trust its headers so absolute URLs use https
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # ----------------------------------------------------------------------
 # EDIT YOUR WEDDING DETAILS HERE
 # ----------------------------------------------------------------------
-
-COUPLE = {
-    "groom": "Arjun",
-    "bride": "Priya",
-    "groom_full": "Arjun Reddy",
-    "bride_full": "Priya Sharma",
-    "tagline": "Two souls, one beautiful journey",
-    "date_iso": "2027-02-14T11:00:00+05:30",
-    "date_display": "Sunday, 14 February 2027",
-    "venue": "The Grand Palace Gardens",
-    "city": "Hyderabad, Telangana",
-    "map_url": "https://maps.google.com/?q=Hyderabad",
-
-    "story": [
-        {
-            "year": "2019",
-            "title": "We Met",
-            "text": (
-                "A rainy afternoon, a shared umbrella and a coffee "
-                "that turned into hours of talking."
-            ),
-        },
-        {
-            "year": "2022",
-            "title": "The Promise",
-            "text": (
-                "Under a sky full of stars, we promised to walk "
-                "through life side by side."
-            ),
-        },
-        {
-            "year": "2026",
-            "title": "She Said Yes",
-            "text": (
-                "One question, one ring, and the happiest yes "
-                "of our lives."
-            ),
-        },
-    ],
-
+WEDDING = {
+    "bride": "Vaishnavi",
+    "groom": "Chinmay",
+    "bride_title": "Chi. Sow. Vaishnavi",
+    "groom_title": "Chi. Chinmay",
+    "bride_parents": ["Smt. Akula Anitha", "Sri Akula Nagesh"],
+    "groom_parents": "Only S/o. Smt. Gandi Soubhagyalaxmi & Sri Gandi Anil Garu",
+    "tagline": "You are not only invited, most expected...",
+    "compliments": "Best compliments from Near & Dear",
+    # The main wedding moment - drives the countdown + scratch-card date
+    "main_date_iso": "2026-11-01T11:13:00+05:30",
+    "main_date_display": "Sunday, 1st November 2026",
+    "main_day": "1",
+    "main_month": "November",
+    "main_year": "2026",
+    "main_weekday": "Sunday",
+    "main_time": "11:13 AM · Dhanur Lagnam",
     "events": [
         {
-            "name": "Mehendi",
-            "time": "12 Feb · 4:00 PM",
-            "icon": "🌿",
-            "desc": "Henna, music and laughter with family.",
+            "key": "pelli-kuthuru",
+            "name": "Pelli Kuthuru",
+            "telugu": "పెళ్లి కూతురు",
+            "icon": "haldi",
+            "day": "30", "month": "Oct", "weekday": "Friday",
+            "time": "7:00 PM onwards",
+            "start": "2026-10-30T19:00:00+05:30",
+            "end": "2026-10-30T22:00:00+05:30",
+            "venue": "Sri Rajarajeshwari Gardens Banquet Hall",
+            "address": "Sikh Rd, Diamond Point, Sikh Village, Bowenpally, Secunderabad, Telangana 500009",
+            "note": "An evening of blessings, turmeric and traditions for the bride.",
         },
         {
-            "name": "Sangeet",
-            "time": "13 Feb · 7:00 PM",
-            "icon": "🎶",
-            "desc": "An evening of dance, songs and celebration.",
+            "key": "wedding",
+            "name": "Wedding Sumuhurtham",
+            "telugu": "సుముహూర్తం",
+            "icon": "ring",
+            "day": "1", "month": "Nov", "weekday": "Sunday",
+            "time": "11:13 AM · Dhanur Lagnam",
+            "start": "2026-11-01T11:13:00+05:30",
+            "end": "2026-11-01T13:30:00+05:30",
+            "venue": "Gayatri Gardens",
+            "address": "Sikh Rd, near Diamond Point, Sikh Village, Bowenpally, Secunderabad, Telangana 500009",
+            "note": "The sacred vows, with your blessings. Lunch follows.",
         },
         {
-            "name": "Wedding Ceremony",
-            "time": "14 Feb · 11:00 AM",
-            "icon": "💍",
-            "desc": "The sacred vows and blessings.",
-        },
-        {
+            "key": "reception",
             "name": "Reception",
-            "time": "14 Feb · 7:30 PM",
-            "icon": "🥂",
-            "desc": "Dinner, dance and memories to last forever.",
+            "telugu": "రిసెప్షన్",
+            "icon": "glass",
+            "day": "3", "month": "Nov", "weekday": "Tuesday",
+            "time": "7:00 PM onwards",
+            "start": "2026-11-03T19:00:00+05:30",
+            "end": "2026-11-03T22:30:00+05:30",
+            "venue": "Gayatri Gardens",
+            "address": "Sikh Rd, near Diamond Point, Sikh Village, Bowenpally, Secunderabad, Telangana 500009",
+            "note": "Dinner, music and memories to last forever.",
         },
     ],
 }
 
-
-# ----------------------------------------------------------------------
-# DATABASE
-# ----------------------------------------------------------------------
-
-def get_db():
-    """Get a SQLite connection for the current request."""
-    if "db" not in g:
-        g.db = sqlite3.connect(DB_PATH, timeout=10)
-        g.db.row_factory = sqlite3.Row
-    return g.db
-
-
-@app.teardown_appcontext
-def close_db(exception=None):
-    """Close the current request's database connection."""
-    db = g.pop("db", None)
-    if db is not None:
-        db.close()
-
-
-def init_db():
-    """Create database tables if they do not exist."""
-    with closing(sqlite3.connect(DB_PATH, timeout=10)) as db:
-        db.executescript(
-            """
-            CREATE TABLE IF NOT EXISTS rsvp (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                email TEXT,
-                guests INTEGER NOT NULL DEFAULT 1,
-                attending TEXT NOT NULL,
-                message TEXT,
-                created_at TEXT NOT NULL
-            );
-
-            CREATE TABLE IF NOT EXISTS wishes (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                message TEXT NOT NULL,
-                created_at TEXT NOT NULL
-            );
-            """
-        )
-        db.commit()
-
-
-def clean(value, limit):
-    """Normalize text and limit its length."""
-    if not isinstance(value, str):
-        return ""
-    return re.sub(r"\s+", " ", value).strip()[:limit]
-
-
-def utc_now():
-    """Return a timezone-aware UTC timestamp."""
-    return datetime.now(timezone.utc).isoformat()
-
-
-def get_json_data():
-    """Read a JSON object safely."""
-    data = request.get_json(silent=True)
-    return data if isinstance(data, dict) else {}
-
-
-# Initialize the database when the application module loads.
-# This also works when Gunicorn imports app:app.
-init_db()
+for _ev in WEDDING["events"]:
+    q = f'{_ev["venue"]}, {_ev["address"]}'
+    _ev["map_q"] = q.replace(" ", "+")
 
 
 # ----------------------------------------------------------------------
-# WEBSITE
+# Routes
 # ----------------------------------------------------------------------
-
-@app.route("/", methods=["GET"])
+@app.route("/")
 def index():
-    return render_template("index.html", c=COUPLE)
+    return render_template("index.html", w=WEDDING)
 
 
-@app.route("/health", methods=["GET"])
-def health():
-    """Health-check endpoint for deployment troubleshooting."""
-    return jsonify(ok=True, status="healthy"), 200
+def _ics_escape(text):
+    return (text.replace("\\", "\\\\").replace(";", "\\;")
+                .replace(",", "\\,").replace("\n", "\\n"))
 
 
-# ----------------------------------------------------------------------
-# RSVP API
-# ----------------------------------------------------------------------
-
-@app.route("/api/rsvp", methods=["POST"])
-def rsvp():
-    data = get_json_data()
-
-    name = clean(data.get("name"), 80)
-    email = clean(data.get("email"), 120)
-    message = clean(data.get("message"), 400)
-    attending = data.get("attending", "yes")
-
-    try:
-        guests = int(data.get("guests", 1))
-        guests = max(1, min(guests, 10))
-    except (TypeError, ValueError, OverflowError):
-        guests = 1
-
-    if not name:
-        return jsonify(
-            ok=False,
-            error="Please enter your name."
-        ), 400
-
-    if attending not in ("yes", "no", "maybe"):
-        return jsonify(
-            ok=False,
-            error="Invalid response."
-        ), 400
-
-    if email and not re.fullmatch(
-        r"[^@\s]+@[^@\s]+\.[^@\s]+", email
-    ):
-        return jsonify(
-            ok=False,
-            error="Please enter a valid email."
-        ), 400
-
-    db = get_db()
-    db.execute(
-        """
-        INSERT INTO rsvp
-            (name, email, guests, attending, message, created_at)
-        VALUES (?, ?, ?, ?, ?, ?)
-        """,
-        (name, email, guests, attending, message, utc_now()),
-    )
-    db.commit()
-
-    if attending == "yes":
-        response_message = (
-            f"Thank you, {name}! "
-            "We can't wait to celebrate with you 💖"
-        )
-    elif attending == "maybe":
-        response_message = (
-            f"Thank you, {name}! "
-            "We appreciate your response 💌"
-        )
-    else:
-        response_message = (
-            f"Thank you for letting us know, {name}. "
-            "You'll be in our hearts 💌"
-        )
-
-    return jsonify(ok=True, message=response_message), 201
+def _utc(iso):
+    return datetime.fromisoformat(iso).astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 
 
-# ----------------------------------------------------------------------
-# WISHES API
-# ----------------------------------------------------------------------
-
-@app.route("/api/wishes", methods=["GET", "POST"])
-def wishes():
-    db = get_db()
-
-    if request.method == "POST":
-        data = get_json_data()
-
-        name = clean(data.get("name"), 60)
-        message = clean(data.get("message"), 300)
-
-        if not name or not message:
-            return jsonify(
-                ok=False,
-                error="Name and wish are required."
-            ), 400
-
-        db.execute(
-            """
-            INSERT INTO wishes (name, message, created_at)
-            VALUES (?, ?, ?)
-            """,
-            (name, message, utc_now()),
-        )
-        db.commit()
-
-    rows = db.execute(
-        """
-        SELECT name, message, created_at
-        FROM wishes
-        ORDER BY id DESC
-        LIMIT 50
-        """
-    ).fetchall()
-
-    return jsonify(
-        ok=True,
-        wishes=[dict(row) for row in rows],
-    ), 200
+@app.route("/calendar/<key>.ics")
+def calendar(key):
+    """'Add to calendar' file for one event."""
+    ev = next((e for e in WEDDING["events"] if e["key"] == key), None)
+    if ev is None:
+        abort(404)
+    title = f'{ev["name"]} - {WEDDING["bride"]} weds {WEDDING["groom"]}'
+    lines = [
+        "BEGIN:VCALENDAR", "VERSION:2.0",
+        "PRODID:-//Wedding Invitation//EN", "CALSCALE:GREGORIAN",
+        "BEGIN:VEVENT",
+        f"UID:{ev['key']}@wedding-invitation",
+        f"DTSTAMP:{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}",
+        f"DTSTART:{_utc(ev['start'])}",
+        f"DTEND:{_utc(ev['end'])}",
+        f"SUMMARY:{_ics_escape(title)}",
+        f"LOCATION:{_ics_escape(ev['venue'] + ', ' + ev['address'])}",
+        f"DESCRIPTION:{_ics_escape(ev['note'])}",
+        "END:VEVENT", "END:VCALENDAR",
+    ]
+    return Response("\r\n".join(lines) + "\r\n", mimetype="text/calendar",
+                    headers={"Content-Disposition": f'attachment; filename="{key}.ics"'})
 
 
-# ----------------------------------------------------------------------
-# ADMIN RSVP API
-# ----------------------------------------------------------------------
+@app.route("/healthz")
+def healthz():
+    return {"ok": True}
 
-@app.route("/api/rsvps", methods=["GET"])
-def list_rsvps():
-    """
-    Admin-only RSVP list.
-
-    URL:
-        /api/rsvps?key=YOUR_ADMIN_KEY
-
-    Set ADMIN_KEY in your Render environment variables.
-    """
-    supplied_key = request.args.get("key", "")
-
-    if not ADMIN_KEY or ADMIN_KEY == "change-me":
-        app.logger.error(
-            "ADMIN_KEY is not configured securely."
-        )
-        return jsonify(
-            ok=False,
-            error="Admin access is not configured."
-        ), 503
-
-    if not supplied_key or supplied_key != ADMIN_KEY:
-        return jsonify(
-            ok=False,
-            error="Unauthorized"
-        ), 401
-
-    db = get_db()
-    rows = db.execute(
-        "SELECT * FROM rsvp ORDER BY id DESC"
-    ).fetchall()
-
-    total_attending = sum(
-        row["guests"]
-        for row in rows
-        if row["attending"] == "yes"
-    )
-
-    return jsonify(
-        ok=True,
-        total_attending=total_attending,
-        rsvps=[dict(row) for row in rows],
-    ), 200
-
-
-# ----------------------------------------------------------------------
-# LOCAL DEVELOPMENT
-# ----------------------------------------------------------------------
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-
-    app.run(
-        host="0.0.0.0",
-        port=port,
-        debug=False,
-    )
+    app.run(host="0.0.0.0", port=port, debug=os.environ.get("FLASK_DEBUG") == "1")
