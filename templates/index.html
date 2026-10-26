@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ c.groom }} &amp; {{ c.bride }} · Wedding Invitation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:wght@300;400;600&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+
+  <!-- 3D background (Three.js) -->
+  <canvas id="bg3d"></canvas>
+
+  <!-- Envelope intro -->
+  <div id="intro">
+    <div class="envelope" id="envelope">
+      <div class="env-back"></div>
+      <div class="letter"><span>You are invited</span></div>
+      <div class="env-front"></div>
+      <div class="env-flap"></div>
+      <div class="seal">❤</div>
+    </div>
+    <p class="intro-hint">Tap the envelope to open</p>
+  </div>
+
+  <main id="site" class="hidden">
+
+    <!-- HERO -->
+    <section class="hero" id="home">
+      <p class="eyebrow reveal">Together with their families</p>
+      <h1 class="names reveal">
+        <span class="n1">{{ c.groom }}</span>
+        <span class="amp">&amp;</span>
+        <span class="n2">{{ c.bride }}</span>
+      </h1>
+      <p class="tagline reveal">{{ c.tagline }}</p>
+      <p class="date reveal">{{ c.date_display }}</p>
+      <p class="venue reveal">{{ c.venue }} · {{ c.city }}</p>
+
+      <div class="countdown reveal" id="countdown">
+        <div><b id="cd-d">00</b><small>Days</small></div>
+        <div><b id="cd-h">00</b><small>Hours</small></div>
+        <div><b id="cd-m">00</b><small>Minutes</small></div>
+        <div><b id="cd-s">00</b><small>Seconds</small></div>
+      </div>
+
+      <a href="#rsvp" class="btn reveal">RSVP Now</a>
+      <div class="scroll-down">⌄</div>
+    </section>
+
+    <!-- STORY -->
+    <section class="section" id="story">
+      <h2 class="title reveal">Our Story</h2>
+      <div class="timeline">
+        {% for s in c.story %}
+        <article class="t-item reveal tilt">
+          <span class="year">{{ s.year }}</span>
+          <h3>{{ s.title }}</h3>
+          <p>{{ s.text }}</p>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- EVENTS -->
+    <section class="section" id="events">
+      <h2 class="title reveal">Celebrations</h2>
+      <div class="cards">
+        {% for e in c.events %}
+        <div class="flip reveal">
+          <div class="flip-inner">
+            <div class="face front">
+              <div class="icon">{{ e.icon }}</div>
+              <h3>{{ e.name }}</h3>
+              <p>{{ e.time }}</p>
+            </div>
+            <div class="face back">
+              <h3>{{ e.name }}</h3>
+              <p>{{ e.desc }}</p>
+              <small>{{ c.venue }}</small>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- VENUE -->
+    <section class="section" id="venue">
+      <h2 class="title reveal">The Venue</h2>
+      <div class="venue-card reveal tilt">
+        <h3>{{ c.venue }}</h3>
+        <p>{{ c.city }}</p>
+        <a class="btn ghost" href="{{ c.map_url }}" target="_blank" rel="noopener">Get Directions</a>
+      </div>
+    </section>
+
+    <!-- RSVP -->
+    <section class="section" id="rsvp">
+      <h2 class="title reveal">Will You Join Us?</h2>
+      <form id="rsvp-form" class="form reveal" autocomplete="off">
+        <input type="text" name="name" placeholder="Your full name" required />
+        <input type="email" name="email" placeholder="Email (optional)" />
+        <div class="row">
+          <select name="attending">
+            <option value="yes">Joyfully accept 🎉</option>
+            <option value="maybe">Not sure yet 🤔</option>
+            <option value="no">Regretfully decline 💌</option>
+          </select>
+          <input type="number" name="guests" min="1" max="10" value="1" title="Number of guests" />
+        </div>
+        <textarea name="message" rows="3" placeholder="A message for the couple (optional)"></textarea>
+        <button class="btn" type="submit">Send RSVP</button>
+        <p id="rsvp-status" class="status"></p>
+      </form>
+    </section>
+
+    <!-- WISHES -->
+    <section class="section" id="wishes">
+      <h2 class="title reveal">Guest Wishes</h2>
+      <form id="wish-form" class="form small reveal" autocomplete="off">
+        <input type="text" name="name" placeholder="Your name" required />
+        <textarea name="message" rows="2" placeholder="Write your blessing..." required></textarea>
+        <button class="btn ghost" type="submit">Post Wish</button>
+      </form>
+      <div id="wish-list" class="wish-list"></div>
+    </section>
+
+    <footer>
+      <p class="script">{{ c.groom }} &amp; {{ c.bride }}</p>
+      <p>With love &amp; gratitude 💖</p>
+    </footer>
+  </main>
+
+  <button id="music-btn" class="music hidden" title="Toggle sparkle">✨</button>
+
+  <script>
+    window.WEDDING = { date: "{{ c.date_iso }}" };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
