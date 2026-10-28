@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- build 2026-10-28-c : plain fonts, real digits -->
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -12,9 +13,9 @@
   <meta property="og:image" content="{{ url_for('static', filename='img/card-save-the-date.jpg', _external=True) }}" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Great+Vibes&family=Montserrat:wght@300;400;500&family=Noto+Serif+Telugu:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Dancing+Script:wght@500;600;700&family=Great+Vibes&family=Montserrat:wght@300;400;500&family=Noto+Serif+Telugu:wght@400;600&display=swap" rel="stylesheet" />
   <script>document.documentElement.className="js"</script>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="{{ static_v('css/style.css') }}" />
 </head>
 <body class="locked">
 
@@ -74,7 +75,7 @@
         <div class="scratch" id="scratch">
           <div class="date-reveal">
             <span class="wd">{{ w.main_weekday }}</span>
-            <span class="big">1<sup>st</sup></span>
+            <span class="big">{{ w.main_day }}<sup>st</sup></span>
             <span class="mo">{{ w.main_month }} {{ w.main_year }}</span>
             <span class="tm">{{ w.main_time }}</span>
           </div>
@@ -100,21 +101,21 @@
           <p class="te om">శ్రీ</p>
           <p class="small-caps">With the blessings of the Almighty</p>
           <h2 class="parents">
-            {% for p in w.bride_parents %}<span>{{ p }}</span>{% endfor %}
+            {% for p in w.bride_parents %}<span>{{ p|caps }}</span>{% endfor %}
           </h2>
           <p class="body-text">
             solicit your gracious presence with family on the auspicious occasion
             of the marriage of our daughter
           </p>
-          <p class="couple-name">{{ w.bride_title }}</p>
+          <p class="couple-name">{{ w.bride_title|caps }}</p>
           <div class="orn"><span></span><i>❖</i><span></span></div>
           <p class="with">with</p>
-          <p class="couple-name groom">{{ w.groom_title }}</p>
+          <p class="couple-name groom">{{ w.groom_title|caps }}</p>
           <p class="body-text sm">({{ w.groom_parents }})</p>
           <div class="orn"><span></span><i>❖</i><span></span></div>
           <p class="small-caps">Sumuhurtham</p>
           <p class="body-text strong">{{ w.main_date_display }} at 11:13 a.m.<br /><em>“Dhanur Lagnam”</em></p>
-          
+          <p class="body-text sm">Lunch follows…</p>
         </div>
       </div>
     </section>
@@ -161,7 +162,10 @@
           </div>
         </div>
       </div>
-      
+      <p class="dl reveal">
+        <a href="{{ url_for('static', filename='img/card-save-the-date.jpg') }}" download>Download card 1</a> ·
+        <a href="{{ url_for('static', filename='img/card-invitation.jpg') }}" download>Download card 2</a>
+      </p>
     </section>
 
     <!-- MAP -->
@@ -186,7 +190,7 @@
   </main>
 
   <script src="{{ url_for('static', filename='js/vendor/three.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/scene.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ static_v('js/scene.js') }}"></script>
+  <script src="{{ static_v('js/main.js') }}"></script>
 </body>
 </html>
