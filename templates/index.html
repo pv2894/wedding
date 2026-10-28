@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build 2026-10-28-c : plain fonts, real digits -->
+<!-- build 2026-10-28-e : Srirasthu spelling -->
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -58,7 +58,7 @@
     <!-- HERO -->
     <section class="hero" id="home">
       <p class="blessing reveal-hero" style="--d:.1s">
-        <span class="te">శ్రీవస్తు</span> <i>Srivasthu</i>
+        <span class="te">శ్రీరస్తు</span> <i>Srirasthu</i>
         <b>✦</b>
         <i>Shubhamasthu</i> <span class="te">శుభమస్తు</span>
       </p>
@@ -101,21 +101,21 @@
           <p class="te om">శ్రీ</p>
           <p class="small-caps">With the blessings of the Almighty</p>
           <h2 class="parents">
-            {% for p in w.bride_parents %}<span>{{ p|caps }}</span>{% endfor %}
+            {% for p in w.bride_parents %}<span>{{ p }}</span>{% endfor %}
           </h2>
           <p class="body-text">
             solicit your gracious presence with family on the auspicious occasion
             of the marriage of our daughter
           </p>
-          <p class="couple-name">{{ w.bride_title|caps }}</p>
+          <p class="couple-name">{{ w.bride_title }}</p>
           <div class="orn"><span></span><i>❖</i><span></span></div>
           <p class="with">with</p>
-          <p class="couple-name groom">{{ w.groom_title|caps }}</p>
+          <p class="couple-name groom">{{ w.groom_title }}</p>
           <p class="body-text sm">({{ w.groom_parents }})</p>
           <div class="orn"><span></span><i>❖</i><span></span></div>
           <p class="small-caps">Sumuhurtham</p>
           <p class="body-text strong">{{ w.main_date_display }} at 11:13 a.m.<br /><em>“Dhanur Lagnam”</em></p>
-          
+          <p class="body-text sm">Lunch follows…</p>
         </div>
       </div>
     </section>
@@ -158,7 +158,7 @@
         <div class="flipcard tilt" id="flipcard" tabindex="0" role="button" aria-label="Flip the invitation card">
           <div class="flip-in">
             <img class="face f" src="{{ url_for('static', filename='img/card-save-the-date.jpg') }}" alt="Save the date card" loading="lazy" />
-            <img class="face b" src="{{ url_for('static', filename='img/card-invitation.jpg') }}" alt="Wedding invitation card" loading="lazy" />
+            <img class="face b" src="{{ url_for('static', filename='img/image.png') }}" alt="Wedding invitation card" loading="lazy" />
           </div>
         </div>
       </div>
@@ -179,7 +179,7 @@
     </section>
 
     <footer>
-      <p class="te">శ్రీవస్తు · శుభమస్తు</p>
+      <p class="te">శ్రీరస్తు · శుభమస్తు</p>
       <p class="script">{{ w.bride }} &amp; {{ w.groom }}</p>
       <p class="tag">{{ w.tagline }}</p>
       <p class="comp">{{ w.compliments }}</p>
