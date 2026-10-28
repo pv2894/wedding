@@ -11,6 +11,10 @@
   src:url('../fonts/lora-latin-400-italic.woff2') format('woff2'),local('Arial'),local('Helvetica'),local('Liberation Sans');unicode-range:U+0030-0039}
 @font-face{font-family:'Num';font-weight:600;font-style:italic;font-display:swap;
   src:url('../fonts/lora-latin-600-italic.woff2') format('woff2'),local('Arial'),local('Helvetica'),local('Liberation Sans');unicode-range:U+0030-0039}
+/* Names: calligraphy-style italic serif (self-hosted) */
+@font-face{font-family:'Playfair Display';font-weight:600;font-style:italic;font-display:swap;
+  src:url('../fonts/playfair-display-latin-600-italic.woff2') format('woff2'),local('Georgia Italic'),local('Georgia')}
+
 :root{
   --ink:#1d040b;
   --maroon:#4a0a1a;
@@ -24,7 +28,7 @@
   --f-script:'Num','Great Vibes',cursive;
   --f-serif:'Num','Cormorant Garamond',Georgia,serif;
   --f-sans:'Montserrat',system-ui,sans-serif;
-  --f-name:Georgia,'Times New Roman',Times,serif;   /* plain, normal font for the names */
+  --f-name:'Playfair Display',Georgia,'Times New Roman',serif;   /* names only */
   --f-digits:'Montserrat',Arial,Helvetica,sans-serif; /* big numbers: always a real 1, 2, 3 */
   --f-te:'Noto Serif Telugu','Cormorant Garamond',serif;
 }
@@ -177,6 +181,7 @@ main{position:relative;z-index:2}
 .blessing b{color:var(--gold)}
 .eyebrow{font-family:var(--f-serif);font-style:italic;font-size:1.5rem;color:#f6d9c0;margin-top:.4rem}
 
+/* NAMES: "Vaishnavi weds Chinmay" always on ONE line */
 .names{display:flex;flex-direction:column;align-items:center;font-weight:400;line-height:1;margin:.2rem 0 1rem;perspective:900px}
 .word{font-family:var(--f-script);font-size:clamp(3.4rem,min(15vw,15.5vh),8.6rem);color:#f8e6a8;white-space:nowrap;
   text-shadow:0 0 34px rgba(246,200,90,.5),0 3px 0 #b98a1c,0 6px 0 #7a5410,0 9px 0 #4a0a1a,0 22px 34px rgba(0,0,0,.6)}
@@ -250,12 +255,12 @@ main{position:relative;z-index:2}
   outline:1px solid var(--gold-d);outline-offset:-9px}
 .om{font-size:2.2rem;font-weight:600;line-height:1;color:var(--crimson);transform:translateZ(30px)}
 .small-caps{font-size:.7rem;letter-spacing:.34em;text-transform:uppercase;color:var(--gold-d);margin:.7rem 0}
-.parents > span{display:block;font-family:var(--f-name);font-weight:700;font-style:normal;font-size:clamp(1.5rem,5vw,2.1rem);line-height:1.5;transform:translateZ(24px)}
+/* parents + couple names: each name stays whole on its own line */
+.parents > span{display:block;white-space:nowrap;font-family:var(--f-name);font-weight:600;font-style:italic;font-size:clamp(1.25rem,5vw,2.25rem);line-height:1.45;transform:translateZ(24px)}
 .body-text{font-family:var(--f-serif);font-style:italic;font-size:1.28rem;line-height:1.5;margin:.7rem auto;max-width:480px}
 .body-text.sm{font-size:1.1rem;opacity:.9}
 .body-text.strong{font-style:normal;font-weight:600;font-size:1.4rem}
-.couple-name{font-family:var(--f-name);font-weight:700;font-style:normal;font-size:clamp(1.6rem,5.4vw,2.2rem);line-height:1.45;margin:.8rem 0 .2rem;transform:translateZ(36px)}
-.cap{display:inline;font-size:1.38em;color:var(--crimson);line-height:1}
+.couple-name{white-space:nowrap;font-family:var(--f-name);font-weight:600;font-style:italic;font-size:clamp(1.3rem,5.4vw,2.4rem);line-height:1.4;margin:.8rem 0 .2rem;transform:translateZ(36px)}
 .couple-name.groom{color:#5a0a1c}
 .with{font-family:var(--f-serif);font-style:italic;font-size:1.3rem}
 .orn{display:flex;align-items:center;gap:.8rem;justify-content:center;margin:1.1rem 0;color:var(--gold-d)}
