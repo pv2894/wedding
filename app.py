@@ -11,11 +11,12 @@ There is no database: the site is a pure invitation (no RSVP).
 import os
 from datetime import datetime, timezone
 
-from flask import Flask, abort, render_template, Response
+from flask import Flask, abort, render_template, Response, url_for
+from markupsafe import Markup, escape
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 app = Flask(__name__)
-app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 60 * 60 * 24  # cache static files 1 day
+app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0  # browsers re-check static files, so edits show immediately
 # Railway sits behind a proxy: trust its headers so absolute URLs use https
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
@@ -85,6 +86,27 @@ WEDDING = {
 for _ev in WEDDING["events"]:
     q = f'{_ev["venue"]}, {_ev["address"]}'
     _ev["map_q"] = q.replace(" ", "+")
+
+
+@app.context_processor
+def static_helpers():
+    def static_v(filename):
+        """static URL + ?v=<file modified time>, so a changed css/js file is never served from old cache."""
+        try:
+            v = int(os.path.getmtime(os.path.join(app.static_folder, filename)))
+        except OSError:
+            v = 0
+        return url_for("static", filename=filename, v=v)
+    return {"static_v": static_v}
+
+
+@app.template_filter("caps")
+def caps(text):
+    """'akula nagesh' -> big capital first letter on every word (styled by .cap in CSS)."""
+    out = []
+    for word in str(text).split():
+        out.append(f'<span class="cap">{escape(word[0].upper())}</span>{escape(word[1:])}')
+    return Markup(" ".join(out))
 
 
 # ----------------------------------------------------------------------
